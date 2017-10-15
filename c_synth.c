@@ -26,8 +26,7 @@ int main(int argc, char *argv[]) {
 			sin_wave_gain * sin(sin_wave_seed * sample_idx);
 	}
 
-	generate_wave_file(sampling_rate, DEF_BIT_DEPTH,
-					   out_pcm, total_sample);
+	generate_wave_file(sampling_rate, out_pcm, total_sample);
 
 	free(out_pcm);
 }

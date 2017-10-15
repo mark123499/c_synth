@@ -7,13 +7,12 @@
 static waveHdr*
 create_riff_header(long datasize);
 static waveFmtChunk*
-create_format_chunk(long sampling_rate, short bit_depth);
+create_format_chunk(long sampling_rate);
 static waveDataChunk*
 create_data_chunk(long datasize);
 
 void
 generate_wave_file(const long sampling_rate,
-				   const short bit_depth,
 				   const PCM_Data *out_pcm,
 				   const unsigned long total_sample)
 {
@@ -25,7 +24,7 @@ generate_wave_file(const long sampling_rate,
 	unsigned int   sample_idx = 0;
 	unsigned int   ch_idx     = 0;
 
-	fmt_chunk = create_format_chunk(sampling_rate, bit_depth);
+	fmt_chunk = create_format_chunk(sampling_rate);
 
 	total_byte = fmt_chunk->block_size * total_sample;
 
@@ -75,7 +74,7 @@ create_riff_header(long datasize)
 }
 
 static waveFmtChunk*
-create_format_chunk(long sampling_rate, short bit_depth)
+create_format_chunk(long sampling_rate)
 {
 	waveFmtChunk *fmt = NULL;
 	fmt = malloc(sizeof(waveFmtChunk));
@@ -85,8 +84,8 @@ create_format_chunk(long sampling_rate, short bit_depth)
 	fmt->chunk_size += sizeof(waveFmtChunk) - 8;
 	fmt->fmt_code = DEF_FORMAT_CODE;
 	fmt->channels = DEF_CHANNEL_NUM;
+	fmt->bit_depth = DEF_BIT_DEPTH;
 	fmt->sampling_rate = sampling_rate;
-	fmt->bit_depth = bit_depth;
 	fmt->block_size = (fmt->bit_depth / 8) * fmt->channels;
 	fmt->byte_per_sec = fmt->sampling_rate * fmt->block_size;
 
