@@ -35,7 +35,6 @@ typedef struct
 
 void
 generate_wave_file(const long sampling_rate,
-				   const PCM_Data *out_pcm,
-				   const unsigned long total_sample);
+				   PCM_Data *out_pcm);
 
 #endif

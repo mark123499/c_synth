@@ -3,30 +3,23 @@
 #include <math.h>
 #include "c_synth.h"
 #include "wave_file.h"
+#include "oscillator.h"
 
 int main(int argc, char *argv[]) {
 	long           sampling_rate = DEF_SAMPLING_RATE;
-	unsigned long  total_sample  = 0;
-	unsigned int   sample_idx    = 0;
-	double         sin_wave_seed = 0;
-	PCM_Data      *out_pcm       = NULL;
-
-	unsigned int   sin_wave_freq = 440;
-	double         sin_wave_gain = 3000;
 	unsigned int   total_sec     = 5;
+	OSC_Params     sine_wave_param;
+	PCM_Data       out_pcm;
 
-	total_sample = sampling_rate * total_sec;
-	out_pcm = calloc(total_sample, sizeof(PCM_Data));
+	out_pcm.total_sample = sampling_rate * total_sec;
+	out_pcm.pcm = calloc(out_pcm.total_sample, sizeof(PCM_Block));
 
-	sin_wave_seed = 2 * M_PI * sin_wave_freq / sampling_rate;
-	for (sample_idx = 0; sample_idx < total_sample; sample_idx++) {
-		out_pcm[sample_idx].pcm_l +=
-			sin_wave_gain * sin(sin_wave_seed * sample_idx);
-		out_pcm[sample_idx].pcm_r +=
-			sin_wave_gain * sin(sin_wave_seed * sample_idx);
-	}
+	sine_wave_param.osc_freq = 440;
+	sine_wave_param.osc_gain = 3000;
+	sine_wave_param.sampling_rate = sampling_rate;
 
-	generate_wave_file(sampling_rate, out_pcm, total_sample);
+	generate_sine_wave(&sine_wave_param, &out_pcm);
+	generate_wave_file(sampling_rate, &out_pcm);
 
-	free(out_pcm);
+	free(out_pcm.pcm);
 }

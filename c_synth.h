@@ -10,6 +10,12 @@ typedef struct
 {
 	signed short pcm_l;
 	signed short pcm_r;
+} PCM_Block;
+
+typedef struct
+{
+	PCM_Block     *pcm;
+	unsigned long  total_sample;
 } PCM_Data;
 
 #endif

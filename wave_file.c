@@ -13,8 +13,7 @@ create_data_chunk(long datasize);
 
 void
 generate_wave_file(const long sampling_rate,
-				   const PCM_Data *out_pcm,
-				   const unsigned long total_sample)
+				   PCM_Data *out_pcm)
 {
 	waveHdr       *wave_hdr   = NULL;
 	waveFmtChunk  *fmt_chunk  = NULL;
@@ -26,7 +25,7 @@ generate_wave_file(const long sampling_rate,
 
 	fmt_chunk = create_format_chunk(sampling_rate);
 
-	total_byte = fmt_chunk->block_size * total_sample;
+	total_byte = fmt_chunk->block_size * out_pcm->total_sample;
 
 	wave_hdr = create_riff_header(total_byte);
 	data_chunk = create_data_chunk(total_byte);
@@ -41,8 +40,8 @@ generate_wave_file(const long sampling_rate,
 	fwrite(fmt_chunk, sizeof(waveFmtChunk), 1, fpw);
 	fwrite(data_chunk, sizeof(waveDataChunk), 1, fpw);
 
-	for (sample_idx = 0; sample_idx < total_sample; sample_idx++) {
-		fwrite(&out_pcm[sample_idx], sizeof(PCM_Data), 1, fpw);
+	for (sample_idx = 0; sample_idx < out_pcm->total_sample; sample_idx++) {
+		fwrite(&out_pcm->pcm[sample_idx], sizeof(PCM_Block), 1, fpw);
 	}
 
 	fclose(fpw);
