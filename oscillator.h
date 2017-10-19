@@ -12,4 +12,12 @@ void
 generate_sine_wave(OSC_Params *osc_param,
 				   PCM_Data *out_pcm);
 
+void
+generate_square_wave(OSC_Params *osc_param,
+					 PCM_Data *out_pcm);
+
+void
+generate_saw_wave(OSC_Params *osc_param,
+				  PCM_Data *out_pcm);
+
 #endif
