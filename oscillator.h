@@ -3,9 +3,9 @@
 
 typedef struct 
 {
-	unsigned int osc_freq;
-	unsigned int osc_gain;
-	long         sampling_rate;
+	unsigned int  osc_freq;
+	unsigned int  osc_gain;
+	unsigned long sampling_rate;
 } OSC_Params;
 
 void

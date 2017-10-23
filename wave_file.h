@@ -1,7 +1,9 @@
 #ifndef WAVE_FILE_H
 #define WAVE_FILE_H
 
-#define STR_LEN 4
+#pragma pack(1)
+
+#define WAVE_STR_LEN 4
 
 #define RIFF_STR "RIFF"
 #define WAVE_STR "WAVE"
@@ -10,31 +12,31 @@
 
 typedef struct 
 {
-	char riff_str[STR_LEN];
-	long filesize;
-	char wave_str[STR_LEN];
-} waveHdr;
+	char          riff_str[WAVE_STR_LEN];
+	unsigned long filesize;
+	char          wave_str[WAVE_STR_LEN];
+} WaveHdr;
 
 typedef struct
 {
-	char  fmt_str[STR_LEN];
-	long  chunk_size;
-	short fmt_code;
-	short channels;
-	long  sampling_rate;
-	long  byte_per_sec;
-	short block_size;
-	short bit_depth;
-} waveFmtChunk;
+	char           fmt_str[WAVE_STR_LEN];
+	unsigned long  chunk_size;
+	unsigned short fmt_code;
+	unsigned short channels;
+	unsigned long  sampling_rate;
+	unsigned long  byte_per_sec;
+	unsigned short block_size;
+	unsigned short bit_depth;
+} WaveFmtChunk;
 
 typedef struct
 {
-	char data_str[STR_LEN];
-	long chunk_size;
-} waveDataChunk;
+	char          data_str[WAVE_STR_LEN];
+	unsigned long chunk_size;
+} WaveDataChunk;
 
 void
-generate_wave_file(const long sampling_rate,
+generate_wave_file(const unsigned long sampling_rate,
 				   PCM_Data *out_pcm);
 
 #endif

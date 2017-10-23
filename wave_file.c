@@ -4,22 +4,22 @@
 #include "c_synth.h"
 #include "wave_file.h"
 
-static waveHdr*
-create_riff_header(long datasize);
-static waveFmtChunk*
-create_format_chunk(long sampling_rate);
-static waveDataChunk*
-create_data_chunk(long datasize);
+static WaveHdr*
+create_riff_header(unsigned long datasize);
+static WaveFmtChunk*
+create_format_chunk(unsigned long sampling_rate);
+static WaveDataChunk*
+create_data_chunk(unsigned long datasize);
 
 void
-generate_wave_file(const long sampling_rate,
+generate_wave_file(const unsigned long sampling_rate,
 				   PCM_Data *out_pcm)
 {
-	waveHdr       *wave_hdr   = NULL;
-	waveFmtChunk  *fmt_chunk  = NULL;
-	waveDataChunk *data_chunk = NULL;
+	WaveHdr       *wave_hdr   = NULL;
+	WaveFmtChunk  *fmt_chunk  = NULL;
+	WaveDataChunk *data_chunk = NULL;
 	FILE          *fpw        = NULL;
-	long           total_byte = 0;
+	unsigned long  total_byte = 0;
 	unsigned int   sample_idx = 0;
 	unsigned int   ch_idx     = 0;
 
@@ -36,9 +36,9 @@ generate_wave_file(const long sampling_rate,
 		goto fail;
 	}
 
-	fwrite(wave_hdr, sizeof(waveHdr), 1, fpw);
-	fwrite(fmt_chunk, sizeof(waveFmtChunk), 1, fpw);
-	fwrite(data_chunk, sizeof(waveDataChunk), 1, fpw);
+	fwrite(wave_hdr, sizeof(WaveHdr), 1, fpw);
+	fwrite(fmt_chunk, sizeof(WaveFmtChunk), 1, fpw);
+	fwrite(data_chunk, sizeof(WaveDataChunk), 1, fpw);
 
 	for (sample_idx = 0; sample_idx < out_pcm->total_sample; sample_idx++) {
 		fwrite(&out_pcm->pcm[sample_idx], sizeof(PCM_Block), 1, fpw);
@@ -54,33 +54,33 @@ fail:
 
 
 /* Private Functions */
-static waveHdr*
-create_riff_header(long datasize)
+static WaveHdr*
+create_riff_header(unsigned long datasize)
 {
-	waveHdr *wave_hdr = NULL;
+	WaveHdr *wave_hdr = NULL;
 
-	wave_hdr = malloc(sizeof(waveHdr));
-	memset(wave_hdr, 0x00, sizeof(waveHdr));
+	wave_hdr = malloc(sizeof(WaveHdr));
+	memset(wave_hdr, 0x00, sizeof(WaveHdr));
 
-	strncpy(wave_hdr->riff_str, RIFF_STR, STR_LEN);
-	wave_hdr->filesize += sizeof(waveHdr) - 8;
-	wave_hdr->filesize += sizeof(waveFmtChunk);
-	wave_hdr->filesize += sizeof(waveDataChunk);
+	strncpy(wave_hdr->riff_str, RIFF_STR, WAVE_STR_LEN);
+	wave_hdr->filesize += sizeof(WaveHdr) - 8;
+	wave_hdr->filesize += sizeof(WaveFmtChunk);
+	wave_hdr->filesize += sizeof(WaveDataChunk);
 	wave_hdr->filesize += datasize;
-	strncpy(wave_hdr->wave_str, WAVE_STR, STR_LEN);
+	strncpy(wave_hdr->wave_str, WAVE_STR, WAVE_STR_LEN);
 
 	return wave_hdr;
 }
 
-static waveFmtChunk*
-create_format_chunk(long sampling_rate)
+static WaveFmtChunk*
+create_format_chunk(unsigned long sampling_rate)
 {
-	waveFmtChunk *fmt = NULL;
-	fmt = malloc(sizeof(waveFmtChunk));
-	memset(fmt, 0x00, sizeof(waveFmtChunk));
+	WaveFmtChunk *fmt = NULL;
+	fmt = malloc(sizeof(WaveFmtChunk));
+	memset(fmt, 0x00, sizeof(WaveFmtChunk));
 
-	strncpy(fmt->fmt_str, FMT_STR, STR_LEN);
-	fmt->chunk_size += sizeof(waveFmtChunk) - 8;
+	strncpy(fmt->fmt_str, FMT_STR, WAVE_STR_LEN);
+	fmt->chunk_size += sizeof(WaveFmtChunk) - 8;
 	fmt->fmt_code = DEF_FORMAT_CODE;
 	fmt->channels = DEF_CHANNEL_NUM;
 	fmt->bit_depth = DEF_BIT_DEPTH;
@@ -91,15 +91,15 @@ create_format_chunk(long sampling_rate)
 	return fmt;
 }
 
-static waveDataChunk*
-create_data_chunk(long datasize)
+static WaveDataChunk*
+create_data_chunk(unsigned long datasize)
 {
-	waveDataChunk *data = NULL;
+	WaveDataChunk *data = NULL;
 
-	data = malloc(sizeof(waveDataChunk));
-	memset(data, 0x00, sizeof(waveDataChunk));
+	data = malloc(sizeof(WaveDataChunk));
+	memset(data, 0x00, sizeof(WaveDataChunk));
 
-	strncpy(data->data_str, DATA_STR, STR_LEN);
+	strncpy(data->data_str, DATA_STR, WAVE_STR_LEN);
 	data->chunk_size = datasize;
 
 	return data;
