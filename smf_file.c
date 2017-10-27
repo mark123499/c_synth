@@ -72,13 +72,11 @@ load_smf_file(const char *smf_path)
 			load_byte = smf_extract_midi_event(fpr, song, offset);
 			processed_byte += load_byte;
 			if (load_byte == 0) {
-				printf("Invalid track.\n");
+				printf("Invalid track. idx:%u\n", track_idx);
 				fclose(fpr);
 				goto fail;
 			}
 		} while (processed_byte < track_hdr.track_size);
-
-		
 	}
 
 	if (0) {
