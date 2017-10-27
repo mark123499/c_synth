@@ -1,12 +1,16 @@
 #ifndef OSCILLATOR_H
 #define OSCILLATOR_H
 
+#include "c_synth.h"
+
 typedef double Freq_t;
 
 typedef struct 
 {
-	Freq_t        osc_freq;
-	unsigned int  osc_gain;
+	Freq_t       osc_freq;
+	unsigned int osc_gain;
+	PCMSample_t  offset;
+	PCMSample_t  dulation;
 } OSC_Params;
 
 void

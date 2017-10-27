@@ -10,11 +10,13 @@ generate_sine_wave(OSC_Params *osc_param,
 {
 	double      sine_wave_seed = 0;
 	PCMSample_t sample_idx     = 0;
+	PCMSample_t start_sample   = osc_param->offset;
+	PCMSample_t end_sample     = start_sample + osc_param->dulation;
 
 	sine_wave_seed = 2 * M_PI * osc_param->osc_freq /
 		out_pcm->sampling_rate;
 
-	for (sample_idx = 0; sample_idx < out_pcm->total_sample; sample_idx++) {
+	for (sample_idx = start_sample; sample_idx < end_sample; sample_idx++) {
 		out_pcm->pcm[sample_idx].pcm_l +=
 			osc_param->osc_gain * sin(sine_wave_seed * sample_idx);
 		out_pcm->pcm[sample_idx].pcm_r +=
@@ -28,11 +30,13 @@ generate_square_wave(OSC_Params *osc_param,
 {
 	double      square_wave_seed = 0;
 	PCMSample_t sample_idx       = 0;
+	PCMSample_t start_sample     = osc_param->offset;
+	PCMSample_t end_sample       = start_sample + osc_param->dulation;
 
 	square_wave_seed = 2 * M_PI * osc_param->osc_freq /
 		out_pcm->sampling_rate;
 
-	for (sample_idx = 0; sample_idx < out_pcm->total_sample; sample_idx++) {
+	for (sample_idx = start_sample; sample_idx < end_sample; sample_idx++) {
 		unsigned int harmonic_idx = 1;
 
 		while(1) {
@@ -61,11 +65,13 @@ generate_saw_wave(OSC_Params *osc_param,
 {
 	double      saw_wave_seed = 0;
 	PCMSample_t sample_idx    = 0;
+	PCMSample_t start_sample  = osc_param->offset;
+	PCMSample_t end_sample    = start_sample + osc_param->dulation;
 
 	saw_wave_seed = 2 * M_PI * osc_param->osc_freq /
 		out_pcm->sampling_rate;
 
-	for (sample_idx = 0; sample_idx < out_pcm->total_sample; sample_idx++) {
+	for (sample_idx = start_sample; sample_idx < end_sample; sample_idx++) {
 		unsigned int harmonic_idx = 1;
 
 		while(1) {
