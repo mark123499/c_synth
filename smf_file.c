@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 #include "smf_file.h"
 
 static SongData *smf_init_song_data(void);
+static Tick_t smf_calc_song_dulation(SongData *song);
 static unsigned char smf_extract_delta_time(FILE *fp,
 											Tick_t *delta_time);
 static unsigned char smf_extract_midi_event(FILE *fp, SongData *song,
@@ -79,6 +79,9 @@ load_smf_file(const char *smf_path)
 		} while (processed_byte < track_hdr.track_size);
 	}
 
+	song->tick_per_beat = smf_hdr.time_type;
+	song->total_tick = smf_calc_song_dulation(song);
+
 	if (0) {
 		unsigned int ch_idx = 0;
 
@@ -140,6 +143,28 @@ smf_init_song_data(void)
 	memset(song, 0x00, sizeof(SongData));
 
 	return song;
+}
+
+static Tick_t
+smf_calc_song_dulation(SongData *song)
+{
+	unsigned int ch_idx         = 0;
+	Tick_t       max_end_offset = 0;
+
+	for (ch_idx = 0; ch_idx < SMF_MAX_CHANNEL_NUM; ch_idx++) {
+		NoteData *head = song->notes[ch_idx];
+
+		while (head != NULL) {
+			Tick_t end_offset = head->offset + head->dulation;
+
+			if (end_offset > max_end_offset) {
+				max_end_offset = end_offset;
+			}
+			head = head->next;
+		}
+	}
+
+	return max_end_offset;
 }
 
 static unsigned char
