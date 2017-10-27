@@ -36,7 +36,6 @@ typedef struct
 } WaveDataChunk;
 
 void
-generate_wave_file(const unsigned long sampling_rate,
-				   PCM_Data *out_pcm);
+generate_wave_file(PCM_Data *out_pcm);
 
 #endif

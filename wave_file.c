@@ -12,18 +12,17 @@ static WaveDataChunk*
 create_data_chunk(unsigned long datasize);
 
 void
-generate_wave_file(const unsigned long sampling_rate,
-				   PCM_Data *out_pcm)
+generate_wave_file(PCM_Data *out_pcm)
 {
 	WaveHdr       *wave_hdr   = NULL;
 	WaveFmtChunk  *fmt_chunk  = NULL;
 	WaveDataChunk *data_chunk = NULL;
 	FILE          *fpw        = NULL;
 	unsigned long  total_byte = 0;
-	unsigned int   sample_idx = 0;
+	PCMSample_t    sample_idx = 0;
 	unsigned int   ch_idx     = 0;
 
-	fmt_chunk = create_format_chunk(sampling_rate);
+	fmt_chunk = create_format_chunk(out_pcm->sampling_rate);
 
 	total_byte = fmt_chunk->block_size * out_pcm->total_sample;
 

@@ -20,8 +20,8 @@
 	_BYTE3(x) << 8 |  \
 	_BYTE4(x)))
 
-#define DELTA_CALC(x) \
-	((unsigned long)( \
+#define DELTA_TIME(x) \
+	((Tick_t)( \
 	(x[0] & 0x7F) << 21 | \
 	(x[1] & 0x7F) << 14 | \
 	(x[2] & 0x7F) << 7 | \
@@ -48,6 +48,8 @@
 #define SMF_META_END         0x2F
 #define SMF_META_TEMPO       0x51
 
+typedef unsigned long Tick_t;
+
 typedef struct 
 {
 	char           mthd_str[SMF_STR_LEN];
@@ -65,8 +67,8 @@ typedef struct
 
 typedef struct _NoteData
 {
-	unsigned long     offset;
-	unsigned long     dulation;
+	Tick_t            offset;
+	Tick_t            dulation;
 	unsigned char     note;
 	unsigned char     velocity;
 	struct _NoteData *next;
@@ -75,8 +77,9 @@ typedef struct _NoteData
 typedef struct
 {
 	unsigned char  channel_cnt;
-	unsigned long  msec_per_beat;
-	unsigned long  time_per_beat;
+	Tick_t         total_tick;
+	unsigned long  usec_per_beat;
+	Tick_t         tick_per_beat;
 	unsigned char  sound[SMF_MAX_CHANNEL_NUM];
 	NoteData      *notes[SMF_MAX_CHANNEL_NUM];
 } SongData;

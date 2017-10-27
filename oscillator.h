@@ -1,11 +1,12 @@
 #ifndef OSCILLATOR_H
 #define OSCILLATOR_H
 
+typedef double Freq_t;
+
 typedef struct 
 {
-	unsigned int  osc_freq;
+	Freq_t        osc_freq;
 	unsigned int  osc_gain;
-	unsigned long sampling_rate;
 } OSC_Params;
 
 void

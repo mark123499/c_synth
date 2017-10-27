@@ -6,6 +6,8 @@
 #define DEF_SAMPLING_RATE 44100
 #define DEF_BIT_DEPTH 16
 
+typedef unsigned long PCMSample_t;
+
 typedef struct 
 {
 	signed short pcm_l;
@@ -14,8 +16,9 @@ typedef struct
 
 typedef struct
 {
-	PCM_Block     *pcm;
-	unsigned long  total_sample;
+	PCM_Block   *pcm;
+	PCMSample_t  total_sample;
+	PCMSample_t  sampling_rate;
 } PCM_Data;
 
 #endif

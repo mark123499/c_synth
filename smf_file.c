@@ -6,9 +6,9 @@
 
 static SongData *smf_init_song_data(void);
 static unsigned char smf_extract_delta_time(FILE *fp,
-											unsigned long *delta_time);
+											Tick_t *delta_time);
 static unsigned char smf_extract_midi_event(FILE *fp, SongData *song,
-											unsigned long offset);
+											Tick_t offset);
 
 /* Temporary Functions */
 static void mem_dump(void* ptr, int counts);
@@ -48,8 +48,8 @@ load_smf_file(const char *smf_path)
 
 	for (track_idx = 0; track_idx < smf_hdr.track_cnt; track_idx++) {
 		TrackHdr      track_hdr;
-		unsigned long offset         = 0;
-		unsigned long delta_time     = 0;
+		Tick_t        offset         = 0;
+		Tick_t        delta_time     = 0;
 		unsigned char load_byte      = 0;
 		unsigned long processed_byte = 0;
 
@@ -87,10 +87,10 @@ load_smf_file(const char *smf_path)
 		printf("hdr_size:%lu format:%u track_cnt:%u time_type:%u\n",
 			   smf_hdr.hdr_size, smf_hdr.format,
 			   smf_hdr.track_cnt, smf_hdr.time_type);
-		printf("msec_per_beat=%u\n", song->msec_per_beat);
+		printf("usec_per_beat=%u\n", song->usec_per_beat);
 
 		for (ch_idx = 0; ch_idx < SMF_MAX_CHANNEL_NUM; ch_idx++) {
-			NoteData     *head   = song->notes[ch_idx];
+			NoteData *head = song->notes[ch_idx];
 
 			printf("\nDump notes ch:%u\n", ch_idx);
 			while (head != NULL) {
@@ -145,7 +145,7 @@ smf_init_song_data(void)
 }
 
 static unsigned char
-smf_extract_delta_time(FILE *fp, unsigned long *delta_time)
+smf_extract_delta_time(FILE *fp, Tick_t *delta_time)
 {
 	unsigned char delta_idx                  = 0;
 	unsigned char delta[MAX_DELTA_TIME_BYTE] = {0};
@@ -176,13 +176,13 @@ smf_extract_delta_time(FILE *fp, unsigned long *delta_time)
 		delta[0] = 0;
 	}
 
-	*delta_time = DELTA_CALC(delta);
+	*delta_time = DELTA_TIME(delta);
 
 	return delta_idx;
 }
 
 static unsigned char
-smf_extract_midi_event(FILE *fp, SongData *song, unsigned long offset)
+smf_extract_midi_event(FILE *fp, SongData *song, Tick_t offset)
 {
 	unsigned char event_buf = 0;
 	unsigned char load_byte = 0;
@@ -199,11 +199,11 @@ smf_extract_midi_event(FILE *fp, SongData *song, unsigned long offset)
 					return 0;
 				}
 				FREAD(&event_buf, sizeof(unsigned char), 1, fp, load_byte);
-				song->msec_per_beat |= event_buf << 16;
+				song->usec_per_beat |= event_buf << 16;
 				FREAD(&event_buf, sizeof(unsigned char), 1, fp, load_byte);
-				song->msec_per_beat |= event_buf << 8;
+				song->usec_per_beat |= event_buf << 8;
 				FREAD(&event_buf, sizeof(unsigned char), 1, fp, load_byte);
-				song->msec_per_beat |= event_buf;
+				song->usec_per_beat |= event_buf;
 				break;
 
 			case SMF_META_END:
