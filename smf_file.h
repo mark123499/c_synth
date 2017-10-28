@@ -82,6 +82,7 @@ typedef struct
 	Tick_t         tick_per_beat;
 	unsigned char  sound[SMF_MAX_CHANNEL_NUM];
 	NoteData      *notes[SMF_MAX_CHANNEL_NUM];
+	unsigned long  total_note;
 } SongData;
 
 SongData *

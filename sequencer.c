@@ -13,7 +13,8 @@ convert_note_to_freq(unsigned char note);
 void
 sequencer_playback(SongData *song, PCM_Data *out_pcm)
 {
-	unsigned int ch_idx = 0;
+	unsigned int  ch_idx   = 0;
+	unsigned long note_cnt = 0;
 
 	out_pcm->total_sample = convert_tick_to_sample(song, out_pcm->sampling_rate,
 												   song->total_tick);
@@ -34,8 +35,13 @@ sequencer_playback(SongData *song, PCM_Data *out_pcm)
 			generate_sine_wave(&osc_param, out_pcm);
 
 			head = head->next;
+			note_cnt++;
+			if (note_cnt % (song->total_note / 10) == 0) {
+				printf("%u0%% ", (unsigned int)note_cnt / (song->total_note / 10));
+			}
 		}
 	}
+	printf("\ndone.\n");
 }
 
 static PCMSample_t
