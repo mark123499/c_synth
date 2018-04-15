@@ -38,15 +38,24 @@
 #define DELTA_TIME_SHIFT 7
 #define DELTA_TIME_CARRY (1 << DELTA_TIME_SHIFT)
 
-#define SMF_STATUS_CH_MASK   0xF0
+#define SMF_EVENT_CH_MASK    0xF0
+#define SMF_CH_MODE_MSG_BDR  0x78
 
-#define SMF_STATUS_NOTE_OFF  0x80
-#define SMF_STATUS_NOTE_ON   0x90
-#define SMF_STATUS_PROG_CHNG 0xC0
-#define SMF_STATUS_META      0xFF
+#define SMF_EVENT_NOTE_OFF   0x80
+#define SMF_EVENT_NOTE_ON    0x90
+#define SMF_EVENT_CTL_CHG    0xB0
+#define SMF_EVENT_PROG_CHNG  0xC0
+#define SMF_EVENT_PITCH_BEND 0xE0
+#define SMF_EVENT_SYSEX_F0   0xF0
+#define SMF_EVENT_SYSEX_F7   0xF7
+#define SMF_EVENT_META       0xFF
 
+#define SMF_META_TEXT        0x01
+#define SMF_META_NAME        0x03
+#define SMF_META_PORT        0x21
 #define SMF_META_END         0x2F
 #define SMF_META_TEMPO       0x51
+#define SMF_META_BEAT        0x58
 
 typedef unsigned long Tick_t;
 

@@ -11,7 +11,11 @@ int main(int argc, char *argv[]) {
 
 	out_pcm.sampling_rate = DEF_SAMPLING_RATE;
 
-	song = load_smf_file("./kanon_small.mid");
+	song = load_smf_file("./dokuhaku.mid");
+	if (!song) {
+		printf("Failed to load SMF file.\n");
+		return 0;
+	}
 	sequencer_playback(song, &out_pcm);
 	generate_wave_file(&out_pcm);
 

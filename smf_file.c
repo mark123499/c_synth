@@ -7,14 +7,17 @@ static SongData *smf_init_song_data(void);
 static void smf_calc_song_statistics(SongData *song);
 static unsigned char smf_extract_delta_time(FILE *fp,
 											Tick_t *delta_time);
-static unsigned char smf_extract_midi_event(FILE *fp, SongData *song,
-											Tick_t offset);
+static unsigned int smf_extract_midi_event(FILE *fp, SongData *song,
+										   Tick_t offset);
 
 /* Temporary Functions */
 static void mem_dump(void* ptr, int counts);
 
 /* Wrapper Functions */
-#define FREAD(a, b, c, d, e) fread(a,b,c,d);e++;
+#define SMF_FREAD(a, b, c) fread(a,sizeof(unsigned char),1,b);c++;
+
+/* Variables */
+static unsigned char prev_event; /* For running status */
 
 SongData *
 load_smf_file(const char *smf_path)
@@ -72,7 +75,8 @@ load_smf_file(const char *smf_path)
 			load_byte = smf_extract_midi_event(fpr, song, offset);
 			processed_byte += load_byte;
 			if (load_byte == 0) {
-				printf("Invalid track. idx:%u\n", track_idx);
+				printf("SMF parse error track_idx:%u processed_byte:%lu\n",
+					   track_idx, processed_byte);
 				fclose(fpr);
 				goto fail;
 			}
@@ -207,117 +211,183 @@ smf_extract_delta_time(FILE *fp, Tick_t *delta_time)
 	return delta_idx;
 }
 
-static unsigned char
+static unsigned int
 smf_extract_midi_event(FILE *fp, SongData *song, Tick_t offset)
 {
 	unsigned char event_buf = 0;
-	unsigned char load_byte = 0;
+	unsigned int  load_byte = 0;
 
-	FREAD(&event_buf, sizeof(unsigned char), 1, fp, load_byte);
+	SMF_FREAD(&event_buf, fp, load_byte);
 
-	if (event_buf == SMF_STATUS_META) {
-		FREAD(&event_buf, sizeof(unsigned char), 1, fp, load_byte);
-		switch (event_buf) {
-			case SMF_META_TEMPO:
-				FREAD(&event_buf, sizeof(unsigned char), 1, fp, load_byte);
-				if (event_buf != 3) {
-					printf("Invalid MIDI event format: Tempo\n");
-					return 0;
-				}
-				FREAD(&event_buf, sizeof(unsigned char), 1, fp, load_byte);
-				song->usec_per_beat |= event_buf << 16;
-				FREAD(&event_buf, sizeof(unsigned char), 1, fp, load_byte);
-				song->usec_per_beat |= event_buf << 8;
-				FREAD(&event_buf, sizeof(unsigned char), 1, fp, load_byte);
-				song->usec_per_beat |= event_buf;
-				break;
+	/* Check running status */
+	if (!(event_buf & 0x80)) {
+		fseek(fp, -1, SEEK_CUR);
+		load_byte--;
+		event_buf = prev_event;
+	}
 
-			case SMF_META_END:
-				FREAD(&event_buf, sizeof(unsigned char), 1, fp, load_byte);
-				if (event_buf != 0) {
-					printf("Invalid MIDI event format: Track END\n");
-					return 0;
-				}
-				break;
+	/* Store event for running status */
+	prev_event = event_buf;
 
-			default:
-				printf("Unknown MIDI event\n");
-				return 0;
+	switch (event_buf) {
+		case SMF_EVENT_SYSEX_F0:
+		case SMF_EVENT_SYSEX_F7: {
+			unsigned char length = 0;
+
+			SMF_FREAD(&length, fp, load_byte);
+			while (length) {
+				SMF_FREAD(&event_buf, fp, load_byte);
+				length--;
+			}
+
+			break;
 		}
-	} else {
-		switch(event_buf & SMF_STATUS_CH_MASK) {
-			case SMF_STATUS_NOTE_OFF: {
-				unsigned char  channel  = event_buf & ~SMF_STATUS_CH_MASK;
-				unsigned char  note     = 0;
-				unsigned char  velocity = 0;
 
-				FREAD(&note, sizeof(unsigned char), 1, fp, load_byte);
-				FREAD(&velocity, sizeof(unsigned char), 1, fp, load_byte);
+		case SMF_EVENT_META:
+			SMF_FREAD(&event_buf, fp, load_byte);
+			switch (event_buf) {
+				case SMF_META_TEXT:
+				case SMF_META_NAME:
+				case SMF_META_PORT:
+				case SMF_META_BEAT: {
+					unsigned char length = 0;
 
-				if (song->notes[channel]) {
-					NoteData *head = song->notes[channel];
-
-					while (head != NULL) {
-						if (head->note == note && head->dulation == 0) {
-							break;
-						}
-						head = head->next;
+					SMF_FREAD(&length, fp, load_byte);
+					while (length) {
+						SMF_FREAD(&event_buf, fp, load_byte);
+						length--;
 					}
-					if (head) {
-						head->dulation = offset - head->offset;
+
+					break;
+				}
+
+				case SMF_META_END:
+					SMF_FREAD(&event_buf, fp, load_byte);
+					if (event_buf != 0) {
+						printf("Invalid MIDI event format: Track END\n");
+						return 0;
+					}
+					break;
+
+				case SMF_META_TEMPO: {
+					unsigned long usec_per_beat = 0;
+
+					SMF_FREAD(&event_buf, fp, load_byte);
+					if (event_buf != 3) {
+						printf("Invalid MIDI event format: Tempo\n");
+						return 0;
+					}
+					SMF_FREAD(&event_buf, fp, load_byte);
+					usec_per_beat |= event_buf << 16;
+					SMF_FREAD(&event_buf, fp, load_byte);
+					usec_per_beat |= event_buf << 8;
+					SMF_FREAD(&event_buf, fp, load_byte);
+					usec_per_beat |= event_buf;
+
+					if (!song->usec_per_beat) {
+						song->usec_per_beat = usec_per_beat;
+					}
+					break;
+				}
+
+				default:
+					printf("Unknown MIDI meta event %X\n", event_buf);
+					return 0;
+			}
+			break;
+
+		default:
+			switch(event_buf & SMF_EVENT_CH_MASK) {
+				case SMF_EVENT_NOTE_OFF: {
+					unsigned char channel  = event_buf & ~SMF_EVENT_CH_MASK;
+					unsigned char note     = 0;
+					unsigned char velocity = 0;
+
+					SMF_FREAD(&note, fp, load_byte);
+					SMF_FREAD(&velocity, fp, load_byte);
+
+					if (song->notes[channel]) {
+						NoteData *head = song->notes[channel];
+
+						while (head != NULL) {
+							if (head->note == note && head->dulation == 0) {
+								break;
+							}
+							head = head->next;
+						}
+						if (head) {
+							head->dulation = offset - head->offset;
+						} else {
+							printf("No target note exist\n");
+							return 0;
+						}
 					} else {
 						printf("No target note exist\n");
 						return 0;
 					}
-				} else {
-					printf("No target note exist\n");
+
+					break;
+				}
+
+				case SMF_EVENT_NOTE_ON: {
+					unsigned char  channel  = event_buf & ~SMF_EVENT_CH_MASK;
+					unsigned char  note     = 0;
+					unsigned char  velocity = 0;
+					NoteData      *new_note = malloc(sizeof(NoteData));
+
+					memset(new_note, 0, sizeof(NoteData));
+
+					SMF_FREAD(&note, fp, load_byte);
+					SMF_FREAD(&velocity, fp, load_byte);
+
+					new_note->offset = offset;
+					new_note->note = note;
+					new_note->velocity = velocity;
+
+					if (song->notes[channel]) {
+						NoteData *head = song->notes[channel];
+
+						new_note->next = head;
+						song->notes[channel] = new_note;
+					} else {
+						song->notes[channel] = new_note;
+					}
+
+					break;
+				}
+
+				case SMF_EVENT_CTL_CHG: {
+					unsigned char control_number = 0;
+					SMF_FREAD(&control_number, fp, load_byte);
+					if (control_number >= SMF_CH_MODE_MSG_BDR) {
+						printf("Channel mode message unsupported\n");
+						return 0;
+					}
+					SMF_FREAD(&event_buf, fp, load_byte);
+					break;
+				}
+
+				case SMF_EVENT_PROG_CHNG: {
+					unsigned char channel = event_buf & ~SMF_EVENT_CH_MASK;
+					unsigned char sound   = 0;
+
+					SMF_FREAD(&sound, fp, load_byte);
+					song->sound[channel] = sound;
+
+					break;
+				}
+
+				case SMF_EVENT_PITCH_BEND:
+					SMF_FREAD(&event_buf, fp, load_byte);
+					SMF_FREAD(&event_buf, fp, load_byte);
+
+					break;
+
+				default:
+					printf("Unknown MIDI event %X\n", event_buf);
 					return 0;
-				}
-
-				break;
 			}
-
-			case SMF_STATUS_NOTE_ON: {
-				unsigned char  channel  = event_buf & ~SMF_STATUS_CH_MASK;
-				unsigned char  note     = 0;
-				unsigned char  velocity = 0;
-				NoteData      *new_note = malloc(sizeof(NoteData));
-
-				memset(new_note, 0, sizeof(NoteData));
-
-				FREAD(&note, sizeof(unsigned char), 1, fp, load_byte);
-				FREAD(&velocity, sizeof(unsigned char), 1, fp, load_byte);
-
-				new_note->offset = offset;
-				new_note->note = note;
-				new_note->velocity = velocity;
-
-				if (song->notes[channel]) {
-					NoteData *head = song->notes[channel];
-
-					new_note->next = head;
-					song->notes[channel] = new_note;
-				} else {
-					song->notes[channel] = new_note;
-				}
-
-				break;
-			}
-
-			case SMF_STATUS_PROG_CHNG: {
-				unsigned char channel = event_buf & ~SMF_STATUS_CH_MASK;
-				unsigned char sound   = 0;
-
-				FREAD(&sound, sizeof(unsigned char), 1, fp, load_byte);
-				song->sound[channel] = sound;
-
-				break;
-			}
-
-			default:
-				printf("Unknown MIDI event\n");
-				return 0;
-		}
+			break;
 	}
 
 	return load_byte;
