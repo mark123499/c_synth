@@ -332,10 +332,31 @@ smf_extract_midi_event(FILE *fp, SongData *song, Tick_t offset)
 					unsigned char  channel  = event_buf & ~SMF_EVENT_CH_MASK;
 					unsigned char  note     = 0;
 					unsigned char  velocity = 0;
-					NoteData      *new_note = calloc(1, sizeof(NoteData));
+					NoteData      *new_note = NULL;
 
 					SMF_FREAD(&note, fp, load_byte);
 					SMF_FREAD(&velocity, fp, load_byte);
+
+					if (!velocity) {
+						if (song->notes[channel]) {
+							NoteData *head = song->notes[channel];
+
+							while (head != NULL) {
+								if (head->note == note && head->dulation == 0) {
+									break;
+								}
+								head = head->next;
+							}
+							if (head) {
+								head->dulation = offset - head->offset;
+								/* Processed note OFF event.
+								 * Gonna break from switch statement. */
+								break;
+							}
+						}
+					}
+
+					new_note = calloc(1, sizeof(NoteData));
 
 					new_note->offset = offset;
 					new_note->note = note;
