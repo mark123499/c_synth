@@ -143,8 +143,7 @@ smf_init_song_data(void)
 	SongData     *song   = NULL;
 	unsigned int  ch_idx = 0;
 
-	song = malloc(sizeof(SongData));
-	memset(song, 0x00, sizeof(SongData));
+	song = calloc(1, sizeof(SongData));
 
 	return song;
 }
@@ -333,9 +332,7 @@ smf_extract_midi_event(FILE *fp, SongData *song, Tick_t offset)
 					unsigned char  channel  = event_buf & ~SMF_EVENT_CH_MASK;
 					unsigned char  note     = 0;
 					unsigned char  velocity = 0;
-					NoteData      *new_note = malloc(sizeof(NoteData));
-
-					memset(new_note, 0, sizeof(NoteData));
+					NoteData      *new_note = calloc(1, sizeof(NoteData));
 
 					SMF_FREAD(&note, fp, load_byte);
 					SMF_FREAD(&velocity, fp, load_byte);

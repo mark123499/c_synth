@@ -58,8 +58,7 @@ create_riff_header(unsigned long datasize)
 {
 	WaveHdr *wave_hdr = NULL;
 
-	wave_hdr = malloc(sizeof(WaveHdr));
-	memset(wave_hdr, 0x00, sizeof(WaveHdr));
+	wave_hdr = calloc(1, sizeof(WaveHdr));
 
 	strncpy(wave_hdr->riff_str, RIFF_STR, WAVE_STR_LEN);
 	wave_hdr->filesize += sizeof(WaveHdr) - 8;
@@ -75,8 +74,7 @@ static WaveFmtChunk*
 create_format_chunk(unsigned long sampling_rate)
 {
 	WaveFmtChunk *fmt = NULL;
-	fmt = malloc(sizeof(WaveFmtChunk));
-	memset(fmt, 0x00, sizeof(WaveFmtChunk));
+	fmt = calloc(1, sizeof(WaveFmtChunk));
 
 	strncpy(fmt->fmt_str, FMT_STR, WAVE_STR_LEN);
 	fmt->chunk_size += sizeof(WaveFmtChunk) - 8;
@@ -95,8 +93,7 @@ create_data_chunk(unsigned long datasize)
 {
 	WaveDataChunk *data = NULL;
 
-	data = malloc(sizeof(WaveDataChunk));
-	memset(data, 0x00, sizeof(WaveDataChunk));
+	data = calloc(1, sizeof(WaveDataChunk));
 
 	strncpy(data->data_str, DATA_STR, WAVE_STR_LEN);
 	data->chunk_size = datasize;
