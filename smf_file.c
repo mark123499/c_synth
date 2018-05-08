@@ -126,7 +126,7 @@ fail:
 void
 smf_free_song_data(SongData *song)
 {
-	unsigned int  ch_idx = 0;
+	unsigned int ch_idx = 0;
 
 	for (ch_idx = 0; ch_idx < SMF_MAX_CHANNEL_NUM; ch_idx++) {
 		NoteData *head = song->notes[ch_idx];
@@ -137,6 +137,13 @@ smf_free_song_data(SongData *song)
 			free(head);
 			head = next;
 		}
+	}
+
+	while(song->tempos) {
+		TempoData *tmp_tempo = song->tempos;
+		song->tempos = tmp_tempo->next;
+
+		free(tmp_tempo);
 	}
 
 	free(song);
