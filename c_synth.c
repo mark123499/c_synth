@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
 
 	out_pcm.sampling_rate = DEF_SAMPLING_RATE;
 
-	song = load_smf_file("./dokuhaku.mid");
+	song = load_smf_file("./smf/dokuhaku_min2.mid");
 	if (!song) {
 		printf("Failed to load SMF file.\n");
 		return 0;

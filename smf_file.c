@@ -85,14 +85,21 @@ load_smf_file(const char *smf_path)
 
 	song->tick_per_beat = smf_hdr.time_type;
 	smf_calc_song_statistics(song);
+	song->tempos->offset = 0;
 
 	if (0) {
-		unsigned int ch_idx = 0;
+		unsigned int  ch_idx = 0;
+		TempoData    *tmp_tempo = song->tempos;
 
 		printf("hdr_size:%lu format:%u track_cnt:%u time_type:%u\n",
 			   smf_hdr.hdr_size, smf_hdr.format,
 			   smf_hdr.track_cnt, smf_hdr.time_type);
-		printf("usec_per_beat=%u\n", song->usec_per_beat);
+
+		while(tmp_tempo) {
+			printf("offset: %5lu, usec_per_beat: %u\n",
+				   tmp_tempo->offset, tmp_tempo->usec_per_beat);
+			tmp_tempo = tmp_tempo->next;
+		}
 
 		for (ch_idx = 0; ch_idx < SMF_MAX_CHANNEL_NUM; ch_idx++) {
 			NoteData *head = song->notes[ch_idx];
@@ -269,7 +276,8 @@ smf_extract_midi_event(FILE *fp, SongData *song, Tick_t offset)
 					break;
 
 				case SMF_META_TEMPO: {
-					unsigned long usec_per_beat = 0;
+					unsigned long  usec_per_beat = 0;
+					TempoData     *new_tempo     = NULL;
 
 					SMF_FREAD(&event_buf, fp, load_byte);
 					if (event_buf != 3) {
@@ -283,8 +291,31 @@ smf_extract_midi_event(FILE *fp, SongData *song, Tick_t offset)
 					SMF_FREAD(&event_buf, fp, load_byte);
 					usec_per_beat |= event_buf;
 
-					if (!song->usec_per_beat) {
-						song->usec_per_beat = usec_per_beat;
+					new_tempo = calloc(1, sizeof(TempoData));
+					new_tempo->offset = offset;
+					new_tempo->usec_per_beat = usec_per_beat;
+
+					if (!song->tempos) {
+						song->tempos = new_tempo;
+					} else {
+						if (song->tempos->offset > offset) {
+							new_tempo->next = song->tempos;
+							song->tempos = new_tempo;
+						} else {
+							TempoData *tmp_tempo = song->tempos;
+							while (tmp_tempo) {
+								if (!tmp_tempo->next) {
+									tmp_tempo->next = new_tempo;
+									break;
+								}
+								if (tmp_tempo->next->offset > offset) {
+									new_tempo->next = tmp_tempo->next;
+									tmp_tempo->next = new_tempo;
+									break;
+								}
+								tmp_tempo = tmp_tempo->next;
+							}
+						}
 					}
 					break;
 				}

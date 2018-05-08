@@ -83,11 +83,18 @@ typedef struct _NoteData
 	struct _NoteData *next;
 } NoteData;
 
+typedef struct _TempoData
+{
+	struct _TempoData *next;
+	Tick_t             offset;
+	unsigned long      usec_per_beat;
+} TempoData;
+
 typedef struct
 {
 	unsigned char  channel_cnt;
 	Tick_t         total_tick;
-	unsigned long  usec_per_beat;
+	TempoData     *tempos;
 	Tick_t         tick_per_beat;
 	unsigned char  sound[SMF_MAX_CHANNEL_NUM];
 	NoteData      *notes[SMF_MAX_CHANNEL_NUM];
