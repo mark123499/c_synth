@@ -253,9 +253,11 @@ smf_extract_midi_event(FILE *fp, SongData *song, Tick_t offset)
 			SMF_FREAD(&event_buf, fp, load_byte);
 			switch (event_buf) {
 				case SMF_META_TEXT:
+				case SMF_META_COPYRIGHT:
 				case SMF_META_NAME:
 				case SMF_META_PORT:
-				case SMF_META_BEAT: {
+				case SMF_META_BEAT:
+				case SMF_META_KEY: {
 					unsigned char length = 0;
 
 					SMF_FREAD(&length, fp, load_byte);

@@ -51,11 +51,13 @@
 #define SMF_EVENT_META       0xFF
 
 #define SMF_META_TEXT        0x01
+#define SMF_META_COPYRIGHT   0x02
 #define SMF_META_NAME        0x03
 #define SMF_META_PORT        0x21
 #define SMF_META_END         0x2F
 #define SMF_META_TEMPO       0x51
 #define SMF_META_BEAT        0x58
+#define SMF_META_KEY         0x59
 
 typedef unsigned long Tick_t;
 
