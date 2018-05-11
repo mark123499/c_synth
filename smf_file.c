@@ -415,13 +415,23 @@ smf_extract_midi_event(FILE *fp, SongData *song, Tick_t offset)
 				}
 
 				case SMF_EVENT_CTL_CHG: {
-					unsigned char control_number = 0;
+					unsigned char channel              = event_buf & ~SMF_EVENT_CH_MASK;
+					unsigned char control_number       = 0;
+					static unsigned char prev_ch       = 0;
+					static unsigned char prev_ctrl_num = 0;
+
 					SMF_FREAD(&control_number, fp, load_byte);
 					if (control_number >= SMF_CH_MODE_MSG_BDR) {
-						printf("Channel mode message unsupported\n");
-						return 0;
+						if (channel == prev_ch &&
+							prev_ctrl_num == 0x7C &&
+							control_number == 0x7E) {
+							SMF_FREAD(&event_buf, fp, load_byte);
+						}
 					}
 					SMF_FREAD(&event_buf, fp, load_byte);
+					prev_ch = channel;
+					prev_ctrl_num = control_number;
+
 					break;
 				}
 
